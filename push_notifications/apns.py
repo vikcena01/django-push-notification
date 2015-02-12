@@ -31,8 +31,23 @@ class APNSDataOverflow(APNSError):
 	pass
 
 
-def _apns_create_socket(address_tuple):
-	certfile = SETTINGS.get("APNS_CERTIFICATE")
+def _apns_create_socket(setting_type, address_tuple):
+	certfile_tuple = SETTINGS.get("APNS_CERTIFICATE")
+
+	if not certfile_tuple:
+		raise ImproperlyConfigured(
+			'You need to set PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] to send messages through APNS.'
+		)
+
+	certfile = None
+
+	for i, (x, y) in enumerate(certfile_tuple):
+		if setting_type is None:
+			certfile = y
+			break
+		elif x == setting_type:
+			certfile = y
+
 	if not certfile:
 		raise ImproperlyConfigured(
 			'You need to set PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] to send messages through APNS.'
@@ -52,7 +67,7 @@ def _apns_create_socket(address_tuple):
 
 
 def _apns_create_socket_to_push():
-	return _apns_create_socket((SETTINGS["APNS_HOST"], SETTINGS["APNS_PORT"]))
+	return _apns_create_socket(setting_type, (SETTINGS["APNS_HOST"], SETTINGS["APNS_PORT"]))
 
 
 def _apns_create_socket_to_feedback():
@@ -99,7 +114,7 @@ def _apns_check_errors(sock):
 		sock.settimeout(saved_timeout)
 
 
-def _apns_send(token, alert, badge=None, sound=None, category=None, content_available=False,
+def _apns_send(setting_type, token, alert, badge=None, sound=None, category=None, content_available=False,
 	action_loc_key=None, loc_key=None, loc_args=[], extra={}, identifier=0,
 	expiration=None, priority=10, socket=None):
 	data = {}
@@ -147,7 +162,7 @@ def _apns_send(token, alert, badge=None, sound=None, category=None, content_avai
 	if socket:
 		socket.write(frame)
 	else:
-		with closing(_apns_create_socket_to_push()) as socket:
+		with closing(_apns_create_socket_to_push(setting_type)) as socket:
 			socket.write(frame)
 			_apns_check_errors(socket)
 
@@ -191,7 +206,7 @@ def _apns_receive_feedback(socket):
 	return expired_token_list
 
 
-def apns_send_message(registration_id, alert, **kwargs):
+def apns_send_message(setting_type, registration_id, alert, **kwargs):
 	"""
 	Sends an APNS notification to a single registration_id.
 	This will send the notification as form data.
@@ -203,10 +218,10 @@ def apns_send_message(registration_id, alert, **kwargs):
 	to this for silent notifications.
 	"""
 
-	_apns_send(registration_id, alert, **kwargs)
+	_apns_send(setting_type, registration_id, alert, **kwargs)
 
 
-def apns_send_bulk_message(registration_ids, alert, **kwargs):
+def apns_send_bulk_message(setting_type, registration_ids, alert, **kwargs):
 	"""
 	Sends an APNS notification to one or more registration_ids.
 	The registration_ids argument needs to be a list.
@@ -217,7 +232,7 @@ def apns_send_bulk_message(registration_ids, alert, **kwargs):
 	"""
 	with closing(_apns_create_socket_to_push()) as socket:
 		for identifier, registration_id in enumerate(registration_ids):
-			_apns_send(registration_id, alert, identifier=identifier, socket=socket, **kwargs)
+			_apns_send(setting_type, registration_id, alert, identifier=identifier, socket=socket, **kwargs)
 		_apns_check_errors(socket)
 
 
