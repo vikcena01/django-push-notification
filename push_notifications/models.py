@@ -38,7 +38,8 @@ class GCMDeviceQuerySet(models.query.QuerySet):
 				data["message"] = message
 
 			reg_ids = list(self.values_list("registration_id", flat=True))
-			return gcm_send_bulk_message(registration_ids=reg_ids, data=data)
+			setting_types = list(self.values_list("learning_level_type", flat=True))
+			return gcm_send_bulk_message(setting_type=setting_types, registration_ids=reg_ids, data=data)
 
 
 class GCMDevice(Device):
@@ -48,18 +49,19 @@ class GCMDevice(Device):
 	device_id = HexIntegerField(verbose_name=_("Device ID"), blank=True, null=True,
 		help_text="ANDROID_ID / TelephonyManager.getDeviceId() (always as hex)")
 	registration_id = models.TextField(verbose_name=_("Registration ID"))
+	learning_level_type = models.CharField(max_length=2, blank=True, null=True)
 
 	objects = GCMDeviceManager()
 
 	class Meta:
 		verbose_name = _("GCM device")
 
-	def send_message(self, message, **kwargs):
+	def send_message(self, setting_type, message, **kwargs):
 		from .gcm import gcm_send_message
 		data = kwargs.pop("extra", {})
 		if message is not None:
 			data["message"] = message
-		return gcm_send_message(registration_id=self.registration_id, data=data, **kwargs)
+		return gcm_send_message(setting_type=self.learning_level_type, registration_id=self.registration_id, data=data, **kwargs)
 
 
 class APNSDeviceManager(models.Manager):
@@ -73,23 +75,24 @@ class APNSDeviceQuerySet(models.query.QuerySet):
 		if self:
 			from .apns import apns_send_bulk_message
 			reg_ids = list(self.values_list("registration_id", flat=True))
-			return apns_send_bulk_message(registration_ids=reg_ids, alert=message, **kwargs)
+			setting_types = list(self.values_list("learning_level_type", flat=True))
+			return apns_send_bulk_message(setting_type=setting_types, registration_ids=reg_ids, alert=message, **kwargs)
 
 
 class APNSDevice(Device):
 	device_id = UUIDField(verbose_name=_("Device ID"), blank=True, null=True,
 		help_text="UDID / UIDevice.identifierForVendor()")
 	registration_id = models.CharField(verbose_name=_("Registration ID"), max_length=64, unique=True)
-
+	learning_level_type = models.CharField(max_length=2, blank=True, null=True)
 	objects = APNSDeviceManager()
 
 	class Meta:
 		verbose_name = _("APNS device")
 
-	def send_message(self, message, **kwargs):
+	def send_message(self, setting_type, message, **kwargs):
 		from .apns import apns_send_message
 
-		return apns_send_message(registration_id=self.registration_id, alert=message, **kwargs)
+		return apns_send_message(setting_type=self.learning_level_type, registration_id=self.registration_id, alert=message, **kwargs)
 
 
 # This is an APNS-only function right now, but maybe GCM will implement it
