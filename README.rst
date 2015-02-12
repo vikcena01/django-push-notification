@@ -12,6 +12,7 @@ The app implements two models: GCMDevice and APNSDevice. Those models share the 
  - user (optional): A foreign key to auth.User, if you wish to link the device to a specific user.
  - device_id (optional): A UUID for the device obtained from Android/iOS APIs, if you wish to uniquely identify it.
  - registration_id (required): The GCM registration id or the APNS token for the device.
+ - learning_level_type(optional): The setting type id to use which setting tuple to send notification on gcm and apns, if not set 1st setting by default will be use.
 
 
 The app also implements an admin panel, through which you can test single and bulk notifications. Select one or more
