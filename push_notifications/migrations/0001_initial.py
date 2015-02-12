@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
                 ('device_id', push_notifications.fields.UUIDField(help_text=b'UDID / UIDevice.identifierForVendor()', max_length=32, null=True, verbose_name='Device ID', blank=True)),
                 ('registration_id', models.CharField(unique=True, max_length=64, verbose_name='Registration ID')),
                 ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('learning_level_type', models.CharField(max_length=2, null=True, blank=True)),
             ],
             options={
                 'verbose_name': 'APNS device',
@@ -40,6 +41,7 @@ class Migration(migrations.Migration):
                 ('device_id', push_notifications.fields.HexIntegerField(help_text=b'ANDROID_ID / TelephonyManager.getDeviceId() (always as hex)', null=True, verbose_name='Device ID', blank=True)),
                 ('registration_id', models.TextField(verbose_name='Registration ID')),
                 ('user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('learning_level_type', models.CharField(max_length=2, null=True, blank=True)),
             ],
             options={
                 'verbose_name': 'GCM device',

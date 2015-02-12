@@ -89,6 +89,7 @@ class Migration(SchemaMigration):
 			"id": ("django.db.models.fields.AutoField", [], {"primary_key": "True"}),
 			"name": ("django.db.models.fields.CharField", [], {"max_length": "255", "null": "True", "blank": "True"}),
 			"registration_id": ("django.db.models.fields.CharField", [], {"unique": "True", "max_length": "64"}),
+			"learning_level_type": ("django.db.models.fields.CharField", [], {"max_length": "2", "null": "True", "blank": "True"}),
 			"user": ("django.db.models.fields.related.ForeignKey", [],
 				{"to": u"orm['%s.%s']" % (User._meta.app_label, User._meta.object_name), "null": "True", "blank": "True"})
 		},
@@ -100,6 +101,7 @@ class Migration(SchemaMigration):
 			"id": ("django.db.models.fields.AutoField", [], {"primary_key": "True"}),
 			"name": ("django.db.models.fields.CharField", [], {"max_length": "255", "null": "True", "blank": "True"}),
 			"registration_id": ("django.db.models.fields.TextField", [], {}),
+			"learning_level_type": ("django.db.models.fields.CharField", [], {"max_length": "2", "null": "True", "blank": "True"}),
 			"user": ("django.db.models.fields.related.ForeignKey", [],
 				{"to": u"orm['%s.%s']" % (User._meta.app_label, User._meta.object_name), "null": "True", "blank": "True"})
 		}
