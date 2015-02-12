@@ -35,7 +35,7 @@ Setup
 -----
 You can install the library directly from pypi using pip::
 
-	$ pip install django-push-notifications
+	$ pip install -e git://github.com/vikcena01/django-push-notification@develop#egg=django-push-notification
 
 
 Edit your settings.py file::
