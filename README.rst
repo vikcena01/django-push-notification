@@ -48,12 +48,12 @@ Edit your settings.py file::
 
 	PUSH_NOTIFICATIONS_SETTINGS = {
     	"GCM_API_KEY": (
-        	(1, "<your api key>"),
-        	(2, "<your api key>"),
+        	('1', "<your api key>"),
+        	('2', "<your api key>"),
     	),
     	"APNS_CERTIFICATE": (
-        	(1, "/path/to/your/certificate.pem"),
-        	(2, "/path/to/your/certificate.pem"),
+        	('1', "/path/to/your/certificate.pem"),
+        	('2', "/path/to/your/certificate.pem"),
     	),
 	}
 
