@@ -39,25 +39,46 @@ def _gcm_send(setting_type, data, content_type):
 		raise ImproperlyConfigured('You need to set PUSH_NOTIFICATIONS_SETTINGS["GCM_API_KEY"] to send messages through GCM.')
 
 	key = None
+	if setting_type.__class__ == list:
+		for sett_type in setting_type:
+			for i, (x, y) in enumerate(key_tuple):
+				if sett_type is None:
+					key = y
+					break
+				elif x == sett_type:
+					key = y
 
-	for i, (x, y) in enumerate(key_tuple):
-		if setting_type is None:
-			key = y
-			break
-		elif x == setting_type:
-			key = y
+			if not key:
+				raise ImproperlyConfigured('You need to set PUSH_NOTIFICATIONS_SETTINGS["GCM_API_KEY"] to send messages through GCM.')
 
-	if not key:
-		raise ImproperlyConfigured('You need to set PUSH_NOTIFICATIONS_SETTINGS["GCM_API_KEY"] to send messages through GCM.')
+			headers = {
+				"Content-Type": content_type,
+				"Authorization": "key=%s" % (key),
+				"Content-Length": str(len(data)),
+			}
 
-	headers = {
-		"Content-Type": content_type,
-		"Authorization": "key=%s" % (key),
-		"Content-Length": str(len(data)),
-	}
+			request = Request(SETTINGS["GCM_POST_URL"], data, headers)
+			return urlopen(request).read()
+	else:
+		sett_type = setting_type
+		for i, (x, y) in enumerate(key_tuple):
+			if sett_type is None:
+				key = y
+				break
+			elif x == sett_type:
+				key = y
 
-	request = Request(SETTINGS["GCM_POST_URL"], data, headers)
-	return urlopen(request).read()
+		if not key:
+			raise ImproperlyConfigured('You need to set PUSH_NOTIFICATIONS_SETTINGS["GCM_API_KEY"] to send messages through GCM.')
+
+		headers = {
+			"Content-Type": content_type,
+			"Authorization": "key=%s" % (key),
+			"Content-Length": str(len(data)),
+		}
+
+		request = Request(SETTINGS["GCM_POST_URL"], data, headers)
+		return urlopen(request).read()
 
 
 def _gcm_send_plain(setting_type, registration_id, data, collapse_key=None, delay_while_idle=False, time_to_live=0):
@@ -135,7 +156,7 @@ def gcm_send_message(setting_type, registration_id, data, collapse_key=None, del
 	try:
 		_gcm_send_plain(setting_type, registration_id, *args)
 	except AttributeError:
-		_gcm_send_json(setting_type, [registration_id], *args)
+		_gcm_send_json([setting_type], [registration_id], *args)
 
 
 def gcm_send_bulk_message(setting_type, registration_ids, data, collapse_key=None, delay_while_idle=False, time_to_live=0):
@@ -153,7 +174,7 @@ def gcm_send_bulk_message(setting_type, registration_ids, data, collapse_key=Non
 	if len(registration_ids) > max_recipients:
 		ret = []
 		for chunk in _chunks(registration_ids, max_recipients):
-			ret.append(_gcm_send_json(chunk, *args))
+			ret.append(_gcm_send_json(setting_type, chunk, *args))
 		return ret
 
 	return _gcm_send_json(setting_type, registration_ids, *args)
