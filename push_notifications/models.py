@@ -56,7 +56,7 @@ class GCMDevice(Device):
 	class Meta:
 		verbose_name = _("GCM device")
 
-	def send_message(self, setting_type, message, **kwargs):
+	def send_message(self, message, **kwargs):
 		from .gcm import gcm_send_message
 		data = kwargs.pop("extra", {})
 		if message is not None:
@@ -89,7 +89,7 @@ class APNSDevice(Device):
 	class Meta:
 		verbose_name = _("APNS device")
 
-	def send_message(self, setting_type, message, **kwargs):
+	def send_message(self, message, **kwargs):
 		from .apns import apns_send_message
 
 		return apns_send_message(setting_type=self.learning_level_type, registration_id=self.registration_id, alert=message, **kwargs)
