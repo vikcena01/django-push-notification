@@ -40,33 +40,59 @@ def _apns_create_socket(setting_type, address_tuple):
 		)
 
 	certfile = None
+	if setting_type.__class__ == list:
+		for sett_type in setting_type:
+			for i, (x, y) in enumerate(certfile_tuple):
+				if sett_type is None:
+					certfile = y
+					break
+				elif x == sett_type:
+					certfile = y
 
-	for i, (x, y) in enumerate(certfile_tuple):
-		if setting_type is None:
-			certfile = y
-			break
-		elif x == setting_type:
-			certfile = y
+			if not certfile:
+				raise ImproperlyConfigured(
+					'You need to set PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] to send messages through APNS.'
+				)
 
-	if not certfile:
-		raise ImproperlyConfigured(
-			'You need to set PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] to send messages through APNS.'
-		)
+			try:
+				with open(certfile, "r") as f:
+					f.read()
+			except Exception as e:
+				raise ImproperlyConfigured("The APNS certificate file at %r is not readable: %s" % (certfile, e))
 
-	try:
-		with open(certfile, "r") as f:
-			f.read()
-	except Exception as e:
-		raise ImproperlyConfigured("The APNS certificate file at %r is not readable: %s" % (certfile, e))
+			sock = socket.socket()
+			sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1, certfile=certfile)
+			sock.connect(address_tuple)
 
-	sock = socket.socket()
-	sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1, certfile=certfile)
-	sock.connect(address_tuple)
+			return sock
+	else:
+		sett_type = setting_type
+		for i, (x, y) in enumerate(certfile_tuple):
+			if sett_type is None:
+				certfile = y
+				break
+			elif x == sett_type:
+				certfile = y
 
-	return sock
+		if not certfile:
+			raise ImproperlyConfigured(
+				'You need to set PUSH_NOTIFICATIONS_SETTINGS["APNS_CERTIFICATE"] to send messages through APNS.'
+			)
+
+		try:
+			with open(certfile, "r") as f:
+				f.read()
+		except Exception as e:
+			raise ImproperlyConfigured("The APNS certificate file at %r is not readable: %s" % (certfile, e))
+
+		sock = socket.socket()
+		sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1, certfile=certfile)
+		sock.connect(address_tuple)
+
+		return sock
 
 
-def _apns_create_socket_to_push():
+def _apns_create_socket_to_push(setting_type):
 	return _apns_create_socket(setting_type, (SETTINGS["APNS_HOST"], SETTINGS["APNS_PORT"]))
 
 
@@ -230,7 +256,7 @@ def apns_send_bulk_message(setting_type, registration_ids, alert, **kwargs):
 	it won't be included in the notification. You will need to pass None
 	to this for silent notifications.
 	"""
-	with closing(_apns_create_socket_to_push()) as socket:
+	with closing(_apns_create_socket_to_push(setting_type)) as socket:
 		for identifier, registration_id in enumerate(registration_ids):
 			_apns_send(setting_type, registration_id, alert, identifier=identifier, socket=socket, **kwargs)
 		_apns_check_errors(socket)
